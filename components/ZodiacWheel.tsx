@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { AstroData } from "@/lib/astrology";
+import { ZODIAC_SIGNS } from "@/lib/astrology";
 
 interface Props {
   astroData: AstroData;
@@ -16,8 +17,12 @@ export default function ZodiacWheel({ astroData }: Props) {
     if (!ctx) return;
 
     const size = 300;
-    canvas.width = size;
-    canvas.height = size;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + "px";
+    canvas.style.height = size + "px";
+    ctx.scale(dpr, dpr);
     const cx = size / 2;
     const cy = size / 2;
     const outerR = 130;
@@ -50,7 +55,7 @@ export default function ZodiacWheel({ astroData }: Props) {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    const signs = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"];
+    const signs = ZODIAC_SIGNS.map(z => z.symbol);
     const signColors = [
       "#ef4444", "#22c55e", "#eab308", "#3b82f6",
       "#f97316", "#84cc16", "#06b6d4", "#8b5cf6",
@@ -89,18 +94,6 @@ export default function ZodiacWheel({ astroData }: Props) {
     });
 
     // Plot planet positions
-    const planetColors: Record<string, string> = {
-      "Soleil": "#FFD700",
-      "Lune": "#C0C0C0",
-      "Mercure": "#B0B0B0",
-      "Vénus": "#90EE90",
-      "Mars": "#FF4500",
-      "Jupiter": "#DEB887",
-      "Saturne": "#DAA520",
-      "Uranus": "#40E0D0",
-      "Neptune": "#4169E1",
-    };
-
     astroData.planetPositions.forEach((pp) => {
       const angle = (pp.sign.start + pp.degree - 90) * (Math.PI / 180);
       const r = innerR - 15;
@@ -109,8 +102,7 @@ export default function ZodiacWheel({ astroData }: Props) {
 
       ctx.beginPath();
       ctx.arc(px, py, 5, 0, Math.PI * 2);
-      const color = planetColors[pp.planet.name] || "#ffffff";
-      ctx.fillStyle = color;
+      ctx.fillStyle = pp.planet.color;
       ctx.fill();
       ctx.strokeStyle = "rgba(255,255,255,0.5)";
       ctx.lineWidth = 1;

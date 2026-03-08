@@ -1,28 +1,13 @@
 "use client";
 import type { AstroData } from "@/lib/astrology";
-import { getElementBalance, getQualityBalance } from "@/lib/astrology";
+import { getElementBalance, ELEMENT_COLORS, ELEMENT_EMOJIS } from "@/lib/astrology";
 
 interface Props {
   astroData: AstroData;
 }
 
-const ELEMENT_COLORS: Record<string, string> = {
-  Feu: "#ef4444",
-  Terre: "#22c55e",
-  Air: "#eab308",
-  Eau: "#3b82f6",
-};
-
-const ELEMENT_EMOJIS: Record<string, string> = {
-  Feu: "🔥",
-  Terre: "🌍",
-  Air: "💨",
-  Eau: "💧",
-};
-
 export default function PlanetGrid({ astroData }: Props) {
   const elements = getElementBalance(astroData);
-  const qualities = getQualityBalance(astroData);
   const totalPlanets = astroData.planetPositions.length;
 
   return (

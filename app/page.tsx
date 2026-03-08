@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import AstroForm from "@/components/AstroForm";
 import PlanetGrid from "@/components/PlanetGrid";
 import PredictionDisplay from "@/components/PredictionDisplay";
-import { calculateAstroData, type AstroData } from "@/lib/astrology";
+import { calculateAstroData, ZODIAC_SIGNS, type AstroData } from "@/lib/astrology";
 
 const StarField = dynamic(() => import("@/components/StarField"), { ssr: false });
 const ZodiacWheel = dynamic(() => import("@/components/ZodiacWheel"), { ssr: false });
@@ -20,6 +20,7 @@ export default function Home() {
     birthTime: string;
     birthPlace: string;
     latitude: string;
+    longitude: string;
     theme: string;
   }) => {
     setLoading(true);
@@ -28,8 +29,9 @@ export default function Home() {
 
     const birthDate = new Date(formData.birthDate + "T12:00:00Z");
     const latitude = parseFloat(formData.latitude) || 48.8566;
+    const longitude = parseFloat(formData.longitude) || 2.3522;
 
-    const data = calculateAstroData(birthDate, formData.birthTime, formData.birthPlace, latitude);
+    const data = calculateAstroData(birthDate, formData.birthTime, formData.birthPlace, latitude, longitude);
     setAstroData(data);
 
     try {
@@ -82,8 +84,8 @@ export default function Home() {
             Déchiffrez les mystères de votre destinée à travers l&apos;alignement des astres
           </p>
           <div className="flex justify-center gap-3 mt-3 text-purple-400/40 text-2xl">
-            {["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"].map((s, i) => (
-              <span key={i} style={{ animationDelay: `${i * 0.2}s` }} className="animate-twinkle">{s}</span>
+            {ZODIAC_SIGNS.map((z, i) => (
+              <span key={z.symbol} style={{ animationDelay: `${i * 0.2}s` }} className="animate-twinkle">{z.symbol}</span>
             ))}
           </div>
         </header>

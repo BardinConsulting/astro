@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import type { AstroData } from "@/lib/astrology";
+import { THEME_CONFIG } from "@/lib/astrology";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -28,18 +29,11 @@ export async function POST(request: NextRequest) {
       .map((a) => `${a.planet1} ${a.symbol} ${a.planet2} (${a.type}, orbe ${a.orb}°)`)
       .join("; ");
 
-    const themeLabels: Record<string, string> = {
-      global: "prévision globale et personnalité",
-      amour: "amour et relations sentimentales",
-      travail: "carrière et vie professionnelle",
-      sante: "santé et bien-être",
-      finances: "finances et prospérité",
-      spiritualite: "chemin spirituel et évolution personnelle",
-    };
+    const themePrompt = THEME_CONFIG[theme]?.prompt ?? THEME_CONFIG.global.prompt;
 
     const prompt = `Tu es un astrologue expert avec une connaissance profonde de l'astrologie occidentale et védique. Génère une prévision astrologique détaillée et poétique en français.
 
-**Thème de la prévision :** ${themeLabels[theme] || "prévision globale"}
+**Thème de la prévision :** ${themePrompt}
 
 **Données natales :**
 - Signe solaire : ${sunSign.name} (${sunSign.element}, ${sunSign.quality}, gouverné par ${sunSign.ruler})
