@@ -1,0 +1,41 @@
+{
+  "name": "astrovision",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Application de prévisions astrologiques propulsée par l'IA (Claude Opus)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:docker": "BUILD_TARGET=docker next build",
+    "build:static": "NEXT_STATIC_EXPORT=true next build",
+    "start": "next start",
+    "lint": "eslint",
+    "android:init": "npx cap init AstroVision com.astrovision.app --web-dir out",
+    "android:add": "npx cap add android",
+    "android:sync": "npx cap sync android",
+    "android:build": "npm run build:static && npx cap sync android && npx cap open android",
+    "android:run": "npx cap run android",
+    "docker:build": "docker build -t astrovision .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env.local astrovision",
+    "docker:compose": "docker-compose up -d"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
