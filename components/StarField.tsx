@@ -10,30 +10,35 @@ export default function StarField() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const stars: { x: number; y: number; r: number; phase: number; speed: number }[] = [];
+
+    const spawnStars = (w: number, h: number) => {
+      stars.length = 0;
+      for (let i = 0; i < 200; i++) {
+        stars.push({
+          x:     Math.random() * w,
+          y:     Math.random() * h,
+          r:     Math.random() * 1.5 + 0.3,
+          phase: Math.random() * Math.PI * 2,
+          speed: Math.random() * 0.02 + 0.005,
+        });
+      }
+    };
+
     let dpr = 1;
     const resize = () => {
       dpr = window.devicePixelRatio || 1;
       const w = window.innerWidth;
       const h = window.innerHeight;
-      canvas.width = w * dpr;
+      canvas.width  = w * dpr;
       canvas.height = h * dpr;
-      canvas.style.width = w + "px";
+      canvas.style.width  = w + "px";
       canvas.style.height = h + "px";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      spawnStars(w, h); // reposition stars within new viewport bounds
     };
     resize();
     window.addEventListener("resize", resize);
-
-    const stars: { x: number; y: number; r: number; phase: number; speed: number }[] = [];
-    for (let i = 0; i < 200; i++) {
-      stars.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        r: Math.random() * 1.5 + 0.3,
-        phase: Math.random() * Math.PI * 2,
-        speed: Math.random() * 0.02 + 0.005,
-      });
-    }
 
     let animId: number;
     let t = 0;
@@ -60,6 +65,8 @@ export default function StarField() {
   return (
     <canvas
       ref={canvasRef}
+      role="presentation"
+      aria-hidden="true"
       className="fixed inset-0 pointer-events-none z-0"
       style={{ opacity: 0.6 }}
     />

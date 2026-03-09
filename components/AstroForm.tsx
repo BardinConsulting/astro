@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { THEME_CONFIG } from "@/lib/astrology";
 
 export interface FormData {
@@ -14,6 +14,7 @@ export interface FormData {
 interface Props {
   onSubmit: (data: FormData) => void;
   loading: boolean;
+  defaultValues?: Partial<FormData>;
 }
 
 const CITIES = [
@@ -43,15 +44,21 @@ const THEMES = Object.entries(THEME_CONFIG).map(([value, cfg]) => ({ value, ...c
 const INPUT_CLASS = "w-full px-4 py-3 rounded-xl text-purple-100 border border-purple-500/30 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all";
 const INPUT_STYLE = { background: "rgba(88, 28, 135, 0.2)" };
 
-export default function AstroForm({ onSubmit, loading }: Props) {
+export default function AstroForm({ onSubmit, loading, defaultValues }: Props) {
   const [formData, setFormData] = useState<FormData>({
-    birthDate:  "",
-    birthTime:  "12:00",
-    birthPlace: "Paris",
-    latitude:   "48.8566",
-    longitude:  "2.3522",
-    theme:      "global",
+    birthDate:  defaultValues?.birthDate  ?? "",
+    birthTime:  defaultValues?.birthTime  ?? "12:00",
+    birthPlace: defaultValues?.birthPlace ?? "Paris",
+    latitude:   defaultValues?.latitude   ?? "48.8566",
+    longitude:  defaultValues?.longitude  ?? "2.3522",
+    theme:      defaultValues?.theme      ?? "global",
   });
+
+  // When share URL is decoded after mount, sync form fields
+  useEffect(() => {
+    if (!defaultValues || Object.keys(defaultValues).length === 0) return;
+    setFormData((prev) => ({ ...prev, ...defaultValues }));
+  }, [defaultValues]);
 
   const handleCityChange = (city: string) => {
     const found = CITIES.find((c) => c.name === city);

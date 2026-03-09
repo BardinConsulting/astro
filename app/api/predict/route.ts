@@ -3,11 +3,71 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { AstroData } from "@/lib/astrology";
 import { THEME_CONFIG } from "@/lib/astrology";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// ─── Rate limiter ────────────────────────────────────────────────────────────
+// In-memory, resets on process restart. Sufficient for Docker/VPS.
+// On serverless (Vercel), each cold start gets a fresh map — acceptable.
+const RATE_LIMIT    = 10;       // requests
+const RATE_WINDOW   = 60_000;   // 1 minute in ms
+const CLEANUP_EVERY = 300_000;  // purge stale entries every 5 min
+
+const rateMap = new Map<string, { count: number; resetAt: number }>();
+let lastCleanup = Date.now();
+
+function getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+
+  // Periodic cleanup to avoid unbounded Map growth
+  if (now - lastCleanup > CLEANUP_EVERY) {
+    for (const [key, entry] of rateMap) {
+      if (now >= entry.resetAt) rateMap.delete(key);
+    }
+    lastCleanup = now;
+  }
+
+  const entry = rateMap.get(ip);
+  if (!entry || now >= entry.resetAt) {
+    rateMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT) return true;
+  entry.count++;
+  return false;
+}
+
+// ─── Handler ─────────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
+  // API key guard — fail fast with a readable error
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return new Response(
+      JSON.stringify({ error: "Configuration serveur manquante : ANTHROPIC_API_KEY non définie" }),
+      { status: 503, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  // Rate limit
+  const ip = getClientIp(request);
+  if (isRateLimited(ip)) {
+    return new Response(
+      JSON.stringify({ error: "Trop de requêtes. Les astres ont besoin d'une pause — réessayez dans une minute." }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": "60",
+        },
+      }
+    );
+  }
+
   try {
     const { astroData, theme }: { astroData: AstroData; theme: string } = await request.json();
 
@@ -55,6 +115,8 @@ ${aspectSummary || "Aucun aspect majeur significatif"}
 6. Conclus avec une affirmation positive et encourageante
 
 Utilise un ton à la fois mystique, poétique et concret. Inclus des métaphores cosmiques. Formate avec des sections claires en utilisant des marqueurs **Titre :** pour chaque section. La prévision doit être riche, détaillée et personnalisée (environ 400-500 mots).`;
+
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     const stream = await client.messages.stream({
       model: "claude-opus-4-6",

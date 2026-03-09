@@ -155,6 +155,8 @@ export default function ZodiacWheel({ astroData }: Props) {
     <div className="flex flex-col items-center gap-3">
       <canvas
         ref={canvasRef}
+        role="img"
+        aria-label={`Roue zodiacale — Soleil en ${astroData.sunSign.name}, Lune en ${astroData.moonSign.name}, Ascendant ${astroData.ascendant.name}`}
         className="animate-rotate-slow"
         style={{ maxWidth: "100%", borderRadius: "50%", boxShadow: "0 0 30px rgba(168, 85, 247, 0.3)" }}
       />
