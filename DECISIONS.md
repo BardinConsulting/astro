@@ -85,3 +85,21 @@
 - ✅ Compatible avec le timeout Vercel de 60s (`maxDuration` dans `vercel.json`)
 - ⚠️ Pas de reconnexion automatique (contrairement à `EventSource`)
 - ⚠️ Un seul flux par requête — pour multi-session, envisager WebSocket
+
+---
+
+## ADR-006 — Playwright pour les tests E2E
+
+**Date** : 2026-03
+**Statut** : Accepté
+
+**Contexte** : Les tests unitaires (`node:test`) couvrent la logique métier mais pas le flux UI complet (chargement de page, formulaire, API health, état du bouton). Cypress est plus lourd (~200 MB) ; Playwright est la référence moderne et supporte Chromium seul.
+
+**Décision** : `@playwright/test` (unique dépendance de test supplémentaire), tests dans `e2e/`, CI avec installation de Chromium uniquement (`--with-deps chromium`).
+
+**Conséquences** :
+- ✅ 4 tests E2E couvrant : chargement page, présence formulaire, API `/api/health`, bouton désactivé sans date
+- ✅ Job CI séparé (`needs: ci`) — n'exécute pas les E2E si le build/lint échoue
+- ✅ Rapport HTML uploadé comme artefact GitHub Actions (7 jours)
+- ⚠️ Playwright ajoute ~80 MB de devDependencies (navigateur Chromium)
+- ⚠️ Pas de tests multi-navigateurs en CI (Firefox/WebKit installables si besoin)

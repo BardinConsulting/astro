@@ -17,9 +17,9 @@ export default function PlanetGrid({ astroData }: Props) {
       {/* Trio principal */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Soleil", sign: astroData.sunSign, emoji: "☀️", sub: "Personnalité" },
-          { label: "Lune", sign: astroData.moonSign, emoji: "🌙", sub: "Émotions" },
-          { label: "Ascendant", sign: astroData.ascendant, emoji: "⬆️", sub: "Image" },
+          { label: t.planets.sunLabel, sign: astroData.sunSign, sub: t.planets.personality },
+          { label: t.planets.moonLabel, sign: astroData.moonSign, sub: t.planets.emotions },
+          { label: t.planets.ascendantLabel, sign: astroData.ascendant, sub: t.planets.image },
         ].map((item) => (
           <div
             key={item.label}
@@ -41,8 +41,8 @@ export default function PlanetGrid({ astroData }: Props) {
 
       {/* Positions planétaires */}
       <div>
-        <h3 className="text-purple-300 text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-          <span>🪐</span> {t.planets.title}
+        <h3 className="text-purple-300 text-xs uppercase tracking-widest mb-3">
+          {t.planets.title}
         </h3>
         <div className="space-y-2">
           {astroData.planetPositions.map((pp, i) => (
@@ -81,8 +81,8 @@ export default function PlanetGrid({ astroData }: Props) {
       {/* Aspects */}
       {astroData.aspects.length > 0 && (
         <div>
-          <h3 className="text-purple-300 text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-            <span>🔗</span> {t.planets.aspects}
+          <h3 className="text-purple-300 text-xs uppercase tracking-widest mb-3">
+            {t.planets.aspects}
           </h3>
           <div className="space-y-1">
             {astroData.aspects.slice(0, 6).map((aspect, i) => (
@@ -113,8 +113,8 @@ export default function PlanetGrid({ astroData }: Props) {
 
       {/* Équilibre élémentaire */}
       <div>
-        <h3 className="text-purple-300 text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-          <span>⚖️</span> {t.planets.balance}
+        <h3 className="text-purple-300 text-xs uppercase tracking-widest mb-3">
+          {t.planets.balance}
         </h3>
         <div className="space-y-2">
           {Object.entries(elements).map(([el, count]) => (

@@ -45,10 +45,16 @@ export interface Translations {
     emptyHint: string;
   };
   planets: {
-    title:    string;
-    aspects:  string;
-    balance:  string;
-    retrograde: string;
+    title:        string;
+    aspects:      string;
+    balance:      string;
+    retrograde:   string;
+    sunLabel:     string;
+    moonLabel:    string;
+    ascendantLabel: string;
+    personality:  string;
+    emotions:     string;
+    image:        string;
   };
   ttft:   string;
   cached: string;
@@ -97,10 +103,16 @@ const fr: Translations = {
     emptyHint: "Votre carte du ciel apparaîtra ici après la consultation",
   },
   planets: {
-    title:      "📊 Positions & Aspects",
-    aspects:    "🔗 Aspects actifs",
-    balance:    "⚖️ Équilibre élémentaire",
-    retrograde: "℞",
+    title:          "📊 Positions & Aspects",
+    aspects:        "🔗 Aspects actifs",
+    balance:        "⚖️ Équilibre élémentaire",
+    retrograde:     "℞",
+    sunLabel:       "Soleil",
+    moonLabel:      "Lune",
+    ascendantLabel: "Ascendant",
+    personality:    "Personnalité",
+    emotions:       "Émotions",
+    image:          "Image",
   },
   ttft:   "1er token",
   cached: "⚡ Depuis le cache",
@@ -149,10 +161,16 @@ const en: Translations = {
     emptyHint: "Your sky chart will appear here after the reading",
   },
   planets: {
-    title:      "📊 Positions & Aspects",
-    aspects:    "🔗 Active aspects",
-    balance:    "⚖️ Elemental balance",
-    retrograde: "℞",
+    title:          "📊 Positions & Aspects",
+    aspects:        "🔗 Active aspects",
+    balance:        "⚖️ Elemental balance",
+    retrograde:     "℞",
+    sunLabel:       "Sun",
+    moonLabel:      "Moon",
+    ascendantLabel: "Ascendant",
+    personality:    "Personality",
+    emotions:       "Emotions",
+    image:          "Image",
   },
   ttft:   "1st token",
   cached: "⚡ From cache",
