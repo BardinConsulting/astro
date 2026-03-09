@@ -1,12 +1,14 @@
 "use client";
 import type { AstroData } from "@/lib/astrology";
 import { getElementBalance, ELEMENT_COLORS, ELEMENT_EMOJIS } from "@/lib/astrology";
+import { useApp } from "@/contexts/app";
 
 interface Props {
   astroData: AstroData;
 }
 
 export default function PlanetGrid({ astroData }: Props) {
+  const { t } = useApp();
   const elements = getElementBalance(astroData);
   const totalPlanets = astroData.planetPositions.length;
 
@@ -40,7 +42,7 @@ export default function PlanetGrid({ astroData }: Props) {
       {/* Positions planétaires */}
       <div>
         <h3 className="text-purple-300 text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-          <span>🪐</span> Positions planétaires
+          <span>🪐</span> {t.planets.title}
         </h3>
         <div className="space-y-2">
           {astroData.planetPositions.map((pp, i) => (
@@ -48,8 +50,8 @@ export default function PlanetGrid({ astroData }: Props) {
               key={pp.planet.name}
               className="flex items-center gap-3 px-3 py-2 rounded-lg animate-fade-in-up"
               style={{
-                background: "rgba(88, 28, 135, 0.1)",
-                border: "1px solid rgba(168, 85, 247, 0.1)",
+                background: "var(--surface-2)",
+                border: "1px solid var(--border-card)",
                 animationDelay: `${i * 60}ms`,
               }}
             >
@@ -80,7 +82,7 @@ export default function PlanetGrid({ astroData }: Props) {
       {astroData.aspects.length > 0 && (
         <div>
           <h3 className="text-purple-300 text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-            <span>🔗</span> Aspects actifs
+            <span>🔗</span> {t.planets.aspects}
           </h3>
           <div className="space-y-1">
             {astroData.aspects.slice(0, 6).map((aspect, i) => (
@@ -88,8 +90,8 @@ export default function PlanetGrid({ astroData }: Props) {
                 key={i}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-l-2 text-xs animate-fade-in-up aspect-${aspect.nature}`}
                 style={{
-                  background: "rgba(88, 28, 135, 0.1)",
-                  border: "1px solid rgba(168, 85, 247, 0.08)",
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border-faint)",
                   animationDelay: `${i * 80}ms`,
                 }}
               >
@@ -112,7 +114,7 @@ export default function PlanetGrid({ astroData }: Props) {
       {/* Équilibre élémentaire */}
       <div>
         <h3 className="text-purple-300 text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-          <span>⚖️</span> Équilibre élémentaire
+          <span>⚖️</span> {t.planets.balance}
         </h3>
         <div className="space-y-2">
           {Object.entries(elements).map(([el, count]) => (
@@ -120,7 +122,7 @@ export default function PlanetGrid({ astroData }: Props) {
               <span className="text-xs w-16 text-purple-300/70 flex items-center gap-1">
                 {ELEMENT_EMOJIS[el]} {el}
               </span>
-              <div className="flex-1 h-2 rounded-full" style={{ background: "rgba(88, 28, 135, 0.3)" }}>
+              <div className="flex-1 h-2 rounded-full" style={{ background: "var(--surface-4)" }}>
                 <div
                   className="h-2 rounded-full transition-all"
                   style={{

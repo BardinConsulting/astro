@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Standalone output for Docker deployment
+  // `output: "standalone"` is activated only when BUILD_TARGET=docker (see Dockerfile).
+  // CI uses `npm run build` (no BUILD_TARGET) → standard output (Vercel / local compatible).
+  // Docker uses `npm run build:docker` which injects BUILD_TARGET=docker → standalone output.
   output: process.env.BUILD_TARGET === "docker" ? "standalone" : undefined,
 
   // For Capacitor/Android static export, use:

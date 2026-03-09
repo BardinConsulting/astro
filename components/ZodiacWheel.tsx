@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import type { AstroData } from "@/lib/astrology";
 import { ZODIAC_SIGNS } from "@/lib/astrology";
+import { useApp } from "@/contexts/app";
 
 interface Props {
   astroData: AstroData;
@@ -9,6 +10,7 @@ interface Props {
 
 export default function ZodiacWheel({ astroData }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { t } = useApp();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -161,9 +163,9 @@ export default function ZodiacWheel({ astroData }: Props) {
         style={{ maxWidth: "100%", borderRadius: "50%", boxShadow: "0 0 30px rgba(168, 85, 247, 0.3)" }}
       />
       <div className="flex gap-4 text-xs text-purple-300">
-        <span>☀ Soleil</span>
-        <span>☽ Lune</span>
-        <span>↑ Ascendant</span>
+        <span>{t.wheel.sun}</span>
+        <span>{t.wheel.moon}</span>
+        <span>{t.wheel.ascendant}</span>
       </div>
     </div>
   );

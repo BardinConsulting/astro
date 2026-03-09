@@ -5,6 +5,7 @@ import AstroForm, { type FormData } from "@/components/AstroForm";
 import PlanetGrid from "@/components/PlanetGrid";
 import PredictionDisplay from "@/components/PredictionDisplay";
 import { calculateAstroData, ZODIAC_SIGNS, type AstroData } from "@/lib/astrology";
+import { useApp } from "@/contexts/app";
 
 const StarField  = dynamic(() => import("@/components/StarField"),  { ssr: false });
 const ZodiacWheel = dynamic(() => import("@/components/ZodiacWheel"), { ssr: false });
@@ -13,7 +14,6 @@ const ZodiacWheel = dynamic(() => import("@/components/ZodiacWheel"), { ssr: fal
 const CACHE_TTL = 86_400_000; // 24 h
 
 function cacheKey(fd: FormData): string {
-  // btoa needs ASCII — all form fields are ASCII-safe
   const raw = [fd.birthDate, fd.birthTime, fd.birthPlace, fd.latitude, fd.longitude, fd.theme].join("|");
   return `av-${btoa(raw).replace(/[+/=]/g, "")}`;
 }
@@ -36,6 +36,8 @@ function cacheSet(fd: FormData, text: string): void {
 }
 
 export default function Home() {
+  const { t, theme, toggleTheme, toggleLocale, locale } = useApp();
+
   const [astroData,    setAstroData]    = useState<AstroData | null>(null);
   const [prediction,   setPrediction]   = useState("");
   const [loading,      setLoading]      = useState(false);
@@ -43,6 +45,8 @@ export default function Home() {
   const [shareDefaults, setShareDefaults] = useState<Partial<FormData>>({});
   const [lastFormData, setLastFormData] = useState<FormData | null>(null);
   const [copied,       setCopied]       = useState(false);
+  const [ttft,         setTtft]         = useState<number | null>(null);
+  const [fromCache,    setFromCache]    = useState(false);
 
   // Accumulates streaming text so we can write it to cache when done
   const fullTextRef = useRef("");
@@ -60,6 +64,8 @@ export default function Home() {
   const handleSubmit = useCallback(async (formData: FormData) => {
     setLoading(true);
     setPrediction("");
+    setTtft(null);
+    setFromCache(false);
     fullTextRef.current = "";
     setCurrentTheme(formData.theme);
     setLastFormData(formData);
@@ -75,6 +81,7 @@ export default function Home() {
     const cached = cacheGet(formData);
     if (cached) {
       setPrediction(cached);
+      setFromCache(true);
       setLoading(false);
       return;
     }
@@ -82,6 +89,8 @@ export default function Home() {
     // 2. Fetch from API with 90s AbortController timeout
     const controller = new AbortController();
     const timeoutId  = setTimeout(() => controller.abort(), 90_000);
+    const startTime  = Date.now();
+    let firstToken   = true;
 
     try {
       const response = await fetch("/api/predict", {
@@ -104,6 +113,10 @@ export default function Home() {
         const { value, done } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
+        if (firstToken) {
+          setTtft(Date.now() - startTime);
+          firstToken = false;
+        }
         fullTextRef.current += chunk;
         setPrediction(fullTextRef.current);
       }
@@ -113,16 +126,16 @@ export default function Home() {
 
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
-        setPrediction("La consultation a expiré après 90 secondes. Les astres sont particulièrement bavards aujourd'hui — veuillez réessayer.");
+        setPrediction(t.prediction.timeout);
       } else {
         const msg = err instanceof Error ? err.message : "";
-        setPrediction(msg || "Une erreur s'est produite lors de la consultation des astres. Veuillez réessayer.");
+        setPrediction(msg || t.prediction.error);
       }
     } finally {
       clearTimeout(timeoutId);
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Share: encode current form data into a ?s= URL and copy to clipboard
   const handleShare = useCallback(() => {
@@ -135,12 +148,14 @@ export default function Home() {
     }).catch(() => { /* clipboard denied */ });
   }, [lastFormData]);
 
+  const handlePrint = useCallback(() => window.print(), []);
+
   return (
-    <div className="relative min-h-screen" style={{ background: "linear-gradient(135deg, #0a0015 0%, #12003a 50%, #0a0015 100%)" }}>
+    <div className="relative min-h-screen" style={{ background: "var(--bg-gradient)" }}>
       <StarField />
 
       {/* Ambient glows */}
-      <div className="fixed inset-0 pointer-events-none z-0">
+      <div className="fixed inset-0 pointer-events-none z-0 no-print">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10"
           style={{ background: "radial-gradient(circle, #7c3aed, transparent)", filter: "blur(60px)" }} />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full opacity-10"
@@ -150,14 +165,34 @@ export default function Home() {
       <div className="relative z-10">
         {/* Header */}
         <header className="text-center py-10 px-4">
-          <div className="text-5xl mb-3 animate-float">✨</div>
+          {/* Theme + Locale toggles */}
+          <div className="absolute top-4 right-4 flex gap-2 no-print">
+            <button
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? t.theme.light : t.theme.dark}
+              className="px-3 py-1.5 rounded-lg text-sm border border-purple-500/30 text-purple-300 hover:border-purple-400 transition-all"
+              style={{ background: "var(--surface-2)" }}
+            >
+              {theme === "dark" ? t.theme.light : t.theme.dark}
+            </button>
+            <button
+              onClick={toggleLocale}
+              aria-label="Switch language"
+              className="px-3 py-1.5 rounded-lg text-sm border border-purple-500/30 text-purple-300 hover:border-purple-400 transition-all"
+              style={{ background: "var(--surface-2)" }}
+            >
+              {locale === "fr" ? "EN" : "FR"}
+            </button>
+          </div>
+
+          <div className="text-5xl mb-3 animate-float no-print">✨</div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2">
             <span className="gradient-text">AstroVision</span>
           </h1>
-          <p className="text-purple-300/70 text-lg max-w-xl mx-auto">
-            Déchiffrez les mystères de votre destinée à travers l&apos;alignement des astres
+          <p className="text-lg max-w-xl mx-auto" style={{ color: "var(--text-muted)" }}>
+            {t.header.tagline}
           </p>
-          <div className="flex justify-center gap-3 mt-3 text-purple-400/40 text-2xl">
+          <div className="flex justify-center gap-3 mt-3 text-2xl no-print" style={{ color: "var(--text-very-faint)" }}>
             {ZODIAC_SIGNS.map((z, i) => (
               <span key={z.symbol} style={{ animationDelay: `${i * 0.2}s` }} className="animate-twinkle">{z.symbol}</span>
             ))}
@@ -169,10 +204,10 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Left: Form */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 no-print">
               <div className="glass-card p-6">
                 <h2 className="text-purple-300 font-bold text-lg mb-6 flex items-center gap-2">
-                  <span>🌟</span> Thème Natal
+                  <span>🌟</span> {t.form.title}
                 </h2>
                 <AstroForm onSubmit={handleSubmit} loading={loading} defaultValues={shareDefaults} />
               </div>
@@ -184,22 +219,19 @@ export default function Home() {
                 <>
                   <div className="glass-card p-6">
                     <h2 className="text-purple-300 font-bold text-lg mb-4 flex items-center gap-2">
-                      <span>🪐</span> Roue Zodiacale
+                      {t.wheel.title}
                     </h2>
                     <ZodiacWheel astroData={astroData} />
                   </div>
                   <div className="glass-card p-6">
-                    <h2 className="text-purple-300 font-bold text-lg mb-4 flex items-center gap-2">
-                      <span>📊</span> Positions & Aspects
-                    </h2>
                     <PlanetGrid astroData={astroData} />
                   </div>
                 </>
               ) : (
-                <div className="glass-card p-8 text-center">
+                <div className="glass-card p-8 text-center no-print">
                   <div className="text-7xl mb-4 animate-rotate-slow inline-block">♈</div>
-                  <p className="text-purple-300/50">
-                    Votre carte du ciel apparaîtra ici après la consultation
+                  <p style={{ color: "var(--text-faint)" }}>
+                    {t.wheel.emptyHint}
                   </p>
                 </div>
               )}
@@ -211,38 +243,49 @@ export default function Home() {
                 text={prediction}
                 loading={loading}
                 theme={currentTheme}
+                ttft={ttft}
+                fromCache={fromCache}
               />
 
-              {/* Cosmic profile + Share */}
+              {/* Cosmic profile + Share + PDF */}
               {astroData && !loading && prediction && (
                 <div className="glass-card p-4 mt-4">
-                  <h3 className="text-purple-300 text-sm font-bold mb-3 flex items-center gap-2">
-                    <span>💫</span> Votre profil cosmique
+                  <h3 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ color: "var(--text-muted)" }}>
+                    {t.profile.title}
                   </h3>
                   <div className="grid grid-cols-3 gap-2 text-center text-xs mb-3">
-                    <div className="p-2 rounded-lg" style={{ background: "rgba(88, 28, 135, 0.2)" }}>
+                    <div className="p-2 rounded-lg" style={{ background: "var(--surface-1)" }}>
                       <div className="text-lg">{astroData.sunSign.emoji}</div>
                       <div className="text-purple-300 font-medium">{astroData.sunSign.name}</div>
-                      <div className="text-purple-400/60">{astroData.sunSign.ruler}</div>
+                      <div style={{ color: "var(--text-faint)" }}>{astroData.sunSign.ruler}</div>
                     </div>
-                    <div className="p-2 rounded-lg" style={{ background: "rgba(88, 28, 135, 0.2)" }}>
+                    <div className="p-2 rounded-lg" style={{ background: "var(--surface-1)" }}>
                       <div className="text-lg">🌙</div>
                       <div className="text-purple-300 font-medium">{astroData.moonSign.name}</div>
-                      <div className="text-purple-400/60">Lune</div>
+                      <div style={{ color: "var(--text-faint)" }}>{t.profile.moon}</div>
                     </div>
-                    <div className="p-2 rounded-lg" style={{ background: "rgba(88, 28, 135, 0.2)" }}>
+                    <div className="p-2 rounded-lg" style={{ background: "var(--surface-1)" }}>
                       <div className="text-lg">{astroData.ascendant.emoji}</div>
                       <div className="text-purple-300 font-medium">{astroData.ascendant.name}</div>
-                      <div className="text-purple-400/60">Ascendant</div>
+                      <div style={{ color: "var(--text-faint)" }}>{t.profile.ascendant}</div>
                     </div>
                   </div>
-                  <button
-                    onClick={handleShare}
-                    className="w-full py-2 px-4 rounded-lg text-xs font-medium transition-all border border-purple-500/30 text-purple-300 hover:border-purple-400 hover:text-purple-100"
-                    style={{ background: "rgba(88, 28, 135, 0.15)" }}
-                  >
-                    {copied ? "✓ Lien copié !" : "🔗 Partager cette consultation"}
-                  </button>
+                  <div className="flex gap-2 no-print">
+                    <button
+                      onClick={handleShare}
+                      className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all border border-purple-500/30 text-purple-300 hover:border-purple-400 hover:text-purple-100"
+                      style={{ background: "var(--surface-2)" }}
+                    >
+                      {copied ? t.profile.copied : t.profile.share}
+                    </button>
+                    <button
+                      onClick={handlePrint}
+                      className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all border border-purple-500/30 text-purple-300 hover:border-purple-400 hover:text-purple-100"
+                      style={{ background: "var(--surface-2)" }}
+                    >
+                      {t.profile.exportPdf}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -250,7 +293,7 @@ export default function Home() {
         </main>
 
         {/* Footer */}
-        <footer className="text-center pb-8 text-purple-400/30 text-sm">
+        <footer className="text-center pb-8 text-sm no-print" style={{ color: "var(--text-very-faint)" }}>
           <p>✦ AstroVision ✦ Propulsé par Claude Opus 4.6 ✦</p>
           <p className="mt-1 text-xs">À des fins de divertissement. Les astres guident, l&apos;humain décide.</p>
         </footer>

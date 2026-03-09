@@ -1,94 +1,152 @@
 @import "tailwindcss";
 
+/* ─── Design tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --background: #0a0015;
-  --foreground: #e8d5ff;
+  /* Dark theme (default) */
+  --background:    #0a0015;
+  --foreground:    #e8d5ff;
+  --bg-gradient:   linear-gradient(135deg, #0a0015 0%, #12003a 50%, #0a0015 100%);
+
+  --glass-bg:      rgba(255, 255, 255, 0.05);
+  --glass-border:  rgba(168, 85, 247, 0.2);
+
+  /* Surfaces — replaces hardcoded rgba(88,28,135,x) everywhere */
+  --surface-1:     rgba(88, 28, 135, 0.2);   /* inputs, card highlights  */
+  --surface-2:     rgba(88, 28, 135, 0.1);   /* list rows                */
+  --surface-3:     rgba(88, 28, 135, 0.15);  /* mid-weight cards         */
+  --surface-4:     rgba(88, 28, 135, 0.3);   /* progress track           */
+
+  --border-card:   rgba(168, 85, 247, 0.1);
+  --border-faint:  rgba(168, 85, 247, 0.08);
+
+  --text-primary:    #e8d5ff;
+  --text-muted:      rgba(216, 180, 254, 0.7);
+  --text-faint:      rgba(216, 180, 254, 0.4);
+  --text-very-faint: rgba(216, 180, 254, 0.3);
 }
 
+[data-theme="light"] {
+  --background:    #f5f0ff;
+  --foreground:    #1a0033;
+  --bg-gradient:   linear-gradient(135deg, #f5f0ff 0%, #ede8ff 50%, #f5f0ff 100%);
+
+  --glass-bg:      rgba(255, 255, 255, 0.8);
+  --glass-border:  rgba(168, 85, 247, 0.3);
+
+  --surface-1:     rgba(168, 85, 247, 0.1);
+  --surface-2:     rgba(168, 85, 247, 0.06);
+  --surface-3:     rgba(168, 85, 247, 0.08);
+  --surface-4:     rgba(168, 85, 247, 0.15);
+
+  --border-card:   rgba(168, 85, 247, 0.2);
+  --border-faint:  rgba(168, 85, 247, 0.15);
+
+  --text-primary:    #1a0033;
+  --text-muted:      rgba(88, 28, 135, 0.7);
+  --text-faint:      rgba(88, 28, 135, 0.5);
+  --text-very-faint: rgba(88, 28, 135, 0.35);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────────── */
 body {
   background: var(--background);
-  color: var(--foreground);
+  color:      var(--foreground);
   font-family: 'Georgia', serif;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-@keyframes twinkle {
-  0%, 100% { opacity: 0.3; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.2); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes rotate-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes twinkle   { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+@keyframes float     { 0%, 100% { transform: translateY(0px);  } 50% { transform: translateY(-10px); } }
+@keyframes rotate-slow { from { transform: rotate(0deg);   } to { transform: rotate(360deg);   } }
+@keyframes shimmer   { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+@keyframes fadeInUp  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.8), 0 0 60px rgba(168, 85, 247, 0.4); }
+  50%       { box-shadow: 0 0 30px rgba(168, 85, 247, 0.8), 0 0 60px rgba(168, 85, 247, 0.4); }
+}
+@keyframes spin-glow {
+  from { transform: rotate(0deg);   filter: drop-shadow(0 0 8px  #a855f7); }
+  to   { transform: rotate(360deg); filter: drop-shadow(0 0 20px #ec4899); }
 }
 
-.animate-twinkle { animation: twinkle 2s ease-in-out infinite; }
-.animate-float { animation: float 3s ease-in-out infinite; }
-.animate-rotate-slow { animation: rotate-slow 20s linear infinite; }
-.animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
-.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-twinkle     { animation: twinkle      2s  ease-in-out infinite; }
+.animate-float       { animation: float        3s  ease-in-out infinite; }
+.animate-rotate-slow { animation: rotate-slow  20s linear     infinite; }
+.animate-fade-in-up  { animation: fadeInUp     0.5s ease-out  forwards; }
+.animate-pulse-glow  { animation: pulse-glow   2s  ease-in-out infinite; }
+.animate-spin-glow   { animation: spin-glow    1s  linear     infinite; }
 
+/* ─── Components ─────────────────────────────────────────────────────────────── */
 .glass-card {
-  background: rgba(255, 255, 255, 0.05);
+  background:      var(--glass-bg);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(168, 85, 247, 0.2);
-  border-radius: 1rem;
+  border:          1px solid var(--glass-border);
+  border-radius:   1rem;
+  transition:      background 0.25s ease, border-color 0.25s ease;
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 3s linear infinite;
+  background:               linear-gradient(135deg, #a855f7, #ec4899, #f59e0b);
+  background-size:          200% auto;
+  -webkit-background-clip:  text;
+  -webkit-text-fill-color:  transparent;
+  background-clip:          text;
+  animation:                shimmer 3s linear infinite;
 }
 
-.zodiac-glow {
-  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6));
-}
+.zodiac-glow { filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6)); }
 
 .planet-badge {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  border:     1px solid rgba(168, 85, 247, 0.4);
 }
 
-.aspect-harmonious { border-left-color: #10b981; }
-.aspect-tendu { border-left-color: #ef4444; }
-.aspect-neutre { border-left-color: #6366f1; }
+.aspect-harmonieux { border-left-color: #10b981; }
+.aspect-tendu      { border-left-color: #ef4444; }
+.aspect-neutre     { border-left-color: #6366f1; }
 
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar       { width: 6px; }
 ::-webkit-scrollbar-track { background: rgba(168, 85, 247, 0.05); }
 ::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.4); border-radius: 3px; }
 
 input, select { color-scheme: dark; }
+[data-theme="light"] input,
+[data-theme="light"] select { color-scheme: light; }
 
-@keyframes spin-glow {
-  from { transform: rotate(0deg); filter: drop-shadow(0 0 8px #a855f7); }
-  to { transform: rotate(360deg); filter: drop-shadow(0 0 20px #ec4899); }
-}
-.animate-spin-glow { animation: spin-glow 1s linear infinite; }
-
-.prediction-text p { margin-bottom: 1rem; line-height: 1.8; }
+.prediction-text p      { margin-bottom: 1rem; line-height: 1.8; }
 .prediction-text strong { color: #c084fc; }
-.prediction-text em { color: #f9a8d4; font-style: italic; }
-.prediction-text h3 { color: #e9d5ff; font-size: 1.1rem; font-weight: 700; margin: 1.2rem 0 0.5rem; }
+.prediction-text em     { color: #f9a8d4; font-style: italic; }
+.prediction-text h3     { color: #e9d5ff; font-size: 1.1rem; font-weight: 700; margin: 1.2rem 0 0.5rem; }
+
+[data-theme="light"] .prediction-text strong { color: #7c3aed; }
+[data-theme="light"] .prediction-text em     { color: #db2777; }
+[data-theme="light"] .prediction-text h3     { color: #1a0033; }
+
+/* ─── Print styles ───────────────────────────────────────────────────────────── */
+@media print {
+  body, html { background: white !important; color: black !important; }
+
+  .no-print  { display: none !important; }
+  canvas     { display: none !important; }
+
+  /* Un-limit the prediction scroll area so the full text prints */
+  .print-full { max-height: none !important; overflow: visible !important; }
+
+  .glass-card {
+    background:      white !important;
+    border:          1px solid #d8b4fe !important;
+    backdrop-filter: none !important;
+    break-inside:    avoid;
+  }
+
+  .gradient-text {
+    -webkit-text-fill-color: black !important;
+    background:              none !important;
+    animation:               none !important;
+  }
+
+  .prediction-text,
+  .prediction-text * { color: black !important; }
+  .prediction-text strong { font-weight: 700 !important; }
+}

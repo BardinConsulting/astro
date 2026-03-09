@@ -23,7 +23,7 @@
 - [x] **Pas de gestion du cas `ANTHROPIC_API_KEY` absente** : vérification ajoutée en tête de handler avec erreur 503 lisible
 - [x] **Canvas StarField — stars hors viewport après resize** : `spawnStars(w, h)` appelé dans `resize()` — positions recalculées à chaque redimensionnement
 - [x] **Accessibilité Canvas** : `role="img"` + `aria-label` dynamique sur `ZodiacWheel` ; `role="presentation"` + `aria-hidden="true"` sur `StarField`
-- [ ] **`next.config.ts` — output conditionnel fragile** : documenter dans un commentaire explicite que le build CI utilise le mode standard (non-standalone) intentionnellement
+- [x] **`next.config.ts` — output conditionnel fragile** : documenter dans un commentaire explicite que le build CI utilise le mode standard (non-standalone) intentionnellement
 
 ---
 
@@ -31,8 +31,8 @@
 
 - [x] Cache du thème natal en `localStorage` (TTL 24h, clé dérivée des paramètres du formulaire, 0 dépendance)
 - [x] Partage de prédiction via URL (`?s=base64(formData)` → pre-fill formulaire, bouton "Copier le lien")
-- [ ] Export PDF du thème natal (via `window.print()` + CSS `@media print`, 0 dépendance)
-- [ ] Support i18n (anglais au minimum)
-- [ ] Mode clair configurable
-- [ ] Tests E2E Playwright pour le flux principal
-- [ ] Métriques de latence streaming côté client (time-to-first-token)
+- [x] Export PDF du thème natal (via `window.print()` + CSS `@media print`, 0 dépendance)
+- [x] Support i18n (anglais au minimum)
+- [x] Mode clair configurable
+- [x] Tests E2E Playwright pour le flux principal
+- [x] Métriques de latence streaming côté client (time-to-first-token)
