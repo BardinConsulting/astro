@@ -1,0 +1,55 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  conventional-commit-title:
+    name: Validate PR title (Conventional Commits)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title format
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Conventional Commits pattern:
+          # type(optional-scope): description
+          # Types: feat, fix, docs, style, refactor, test, ci, chore, perf, revert, build
+          PATTERN='^(feat|fix|docs|style|refactor|test|ci|chore|perf|revert|build)(\(.+\))?: .{1,100}$'
+
+          if echo "$PR_TITLE" | grep -qE "$PATTERN"; then
+            echo "✅ PR title follows Conventional Commits: '$PR_TITLE'"
+          else
+            echo "❌ PR title does not follow Conventional Commits format."
+            echo ""
+            echo "Expected format: type(scope): description"
+            echo "  Examples:"
+            echo "    feat: add dark mode"
+            echo "    fix(api): handle empty response"
+            echo "    docs: update README"
+            echo ""
+            echo "Valid types: feat, fix, docs, style, refactor, test, ci, chore, perf, revert, build"
+            echo ""
+            echo "Got: '$PR_TITLE'"
+            exit 1
+          fi
+
+  auto-assign:
+    name: Auto-assign reviewers
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Auto-assign PR author
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              reviewers: [context.payload.pull_request.user.login],
+            }).catch(() => {
+              // Silently ignore if user can't review their own PR
+              console.log('Could not auto-assign reviewer (expected for self-review)');
+            });
