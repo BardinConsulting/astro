@@ -36,3 +36,7 @@
 - [x] Mode clair configurable
 - [x] Tests E2E Playwright pour le flux principal
 - [x] Métriques de latence streaming côté client (time-to-first-token)
+- [x] Générateur local de prévisions (0 dépendance externe, fallback si clé absente, couvre 9 planètes × 12 signes × 6 thèmes)
+- [x] Lien `manifest.json` manquant dans `layout.tsx` — PWA install cassée ; ajouté via `metadata.manifest`
+- [x] Uranus et Neptune absents de `PLANET_MEANING` dans le générateur local — interprétations ajoutées (12 signes chacun)
+- [x] `.env.example` — clarifier que `ANTHROPIC_API_KEY` est désormais optionnelle

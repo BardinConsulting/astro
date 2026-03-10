@@ -6,12 +6,16 @@ export const metadata: Metadata = {
   title: "✨ AstroVision — Prévisions Astrologiques IA",
   description: "Découvrez votre destinée à travers les astres. Prévisions personnalisées basées sur votre signe solaire, ascendant, signe lunaire et l'alignement des planètes, propulsées par l'IA.",
   keywords: "astrologie, horoscope, signe zodiacal, ascendant, planètes, prévisions, IA",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AstroVision",
+  },
   other: {
-    "mobile-web-app-capable":                "yes",
-    "apple-mobile-web-app-capable":          "yes",
-    "apple-mobile-web-app-status-bar-style": "black-translucent",
-    "theme-color":                           "#0a0015",
-  }
+    "mobile-web-app-capable": "yes",
+    "theme-color":            "#0a0015",
+  },
 };
 
 export default function RootLayout({

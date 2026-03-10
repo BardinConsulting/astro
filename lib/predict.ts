@@ -131,6 +131,35 @@ const PLANET_MEANING: Record<string, Record<string, string>> = {
     Verseau:    "une responsabilité collective et une innovation structurée qui dure",
     Poissons:   "une dissolution des illusions menant à une spiritualité authentique et éprouvée",
   },
+  // Outer planets — slow-moving, define generational context
+  Uranus: {
+    Bélier:     "une révolution de l'identité et un éveil à une liberté radicale et authentique",
+    Taureau:    "une transformation des valeurs matérielles et une révolution dans la relation à l'abondance",
+    Gémeaux:    "une révolution dans la communication et des idées qui brisent les paradigmes établis",
+    Cancer:     "une transformation des structures familiales et une libération des conditionnements du passé",
+    Lion:       "une créativité révolutionnaire et une expression de soi qui défie les conventions",
+    Vierge:     "une transformation des méthodes de travail et une révolution dans les soins et la santé",
+    Balance:    "une révolution dans les relations et une redéfinition des équilibres sociaux",
+    Scorpion:   "une transformation profonde des tabous et une révolution dans le rapport au pouvoir",
+    Sagittaire: "une révolution philosophique et une libération des dogmes religieux ou idéologiques",
+    Capricorne: "une transformation des structures d'autorité et une révolution dans l'ordre social",
+    Verseau:    "une force révolutionnaire dans son élément natal, amplifiant l'innovation et la liberté collective",
+    Poissons:   "une dissolution des frontières entre le réel et l'idéal, une révolution spirituelle subtile",
+  },
+  Neptune: {
+    Bélier:     "une dissolution des frontières de l'ego et une quête spirituelle ardente et pionnière",
+    Taureau:    "une idéalisation de la beauté matérielle et une sensibilité artistique profondément ancrée",
+    Gémeaux:    "une pensée intuitive et poétique qui transcende la logique ordinaire",
+    Cancer:     "une sensibilité familiale mystique et une compassion universelle enracinée dans l'enfance",
+    Lion:       "une créativité transcendante et un besoin d'expression artistique et spirituelle",
+    Vierge:     "une dévotion au service idéal et une sensibilité aux souffrances du monde",
+    Balance:    "une quête d'harmonie universelle et un idéal romantique et esthétique élevé",
+    Scorpion:   "une plongée dans les mystères de l'âme et une transformation spirituelle profonde",
+    Sagittaire: "une quête philosophique transcendante et une foi expansive en quelque chose de plus grand",
+    Capricorne: "une spiritualisation des ambitions et une dissolution graduelle des structures rigides",
+    Verseau:    "un idéalisme humaniste collectif et une vision d'une humanité unie et éveillée",
+    Poissons:   "une immersion totale dans le mystique, une compassion cosmique et un don artistique profond",
+  },
 };
 
 // ─── Aspect interpretations ───────────────────────────────────────────────────
@@ -248,7 +277,7 @@ export function generatePrediction(astroData: AstroData, theme: string): string 
   ].join(" ");
 
   // ── Section 3 : Planets ───────────────────────────────────────────────────
-  const priorityPlanets = ["Mercure", "Vénus", "Mars", "Jupiter", "Saturne"];
+  const priorityPlanets = ["Mercure", "Vénus", "Mars", "Jupiter", "Saturne", "Uranus", "Neptune"];
   const planetLines: string[] = [];
   for (const name of priorityPlanets) {
     const pp = planetPositions.find((p) => p.planet.name === name);
