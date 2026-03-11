@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import type { AstroData } from "@/lib/astrology";
 import { THEME_CONFIG } from "@/lib/astrology";
+import { generatePrediction } from "@/lib/predict";
 
 // ─── Rate limiter ────────────────────────────────────────────────────────────
 // In-memory, resets on process restart. Sufficient for Docker/VPS.
@@ -45,14 +45,6 @@ function isRateLimited(ip: string): boolean {
 // ─── Handler ─────────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  // API key guard — fail fast with a readable error
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: "Configuration serveur manquante : ANTHROPIC_API_KEY non définie" }),
-      { status: 503, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
   // Rate limit
   const ip = getClientIp(request);
   if (isRateLimited(ip)) {
@@ -60,16 +52,18 @@ export async function POST(request: NextRequest) {
       JSON.stringify({ error: "Trop de requêtes. Les astres ont besoin d'une pause — réessayez dans une minute." }),
       {
         status: 429,
-        headers: {
-          "Content-Type": "application/json",
-          "Retry-After": "60",
-        },
+        headers: { "Content-Type": "application/json", "Retry-After": "60" },
       }
     );
   }
 
+  let astroData: AstroData;
+  let theme: string;
+
   try {
-    const { astroData, theme }: { astroData: AstroData; theme: string } = await request.json();
+    const body = await request.json() as { astroData: AstroData; theme: string };
+    astroData = body.astroData;
+    theme     = body.theme ?? "global";
 
     if (!astroData) {
       return new Response(JSON.stringify({ error: "Données astrologiques manquantes" }), {
@@ -77,21 +71,34 @@ export async function POST(request: NextRequest) {
         headers: { "Content-Type": "application/json" },
       });
     }
+  } catch {
+    return new Response(JSON.stringify({ error: "Corps de requête invalide" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
-    const { sunSign, moonSign, ascendant, planetPositions, aspects } = astroData;
+  // ── Path A: Claude API (when key is present) ──────────────────────────────
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (apiKey) {
+    try {
+      const { default: Anthropic } = await import("@anthropic-ai/sdk");
+      const client = new Anthropic({ apiKey });
 
-    const planetSummary = planetPositions
-      .map((p) => `${p.planet.name} en ${p.sign.name}${p.retrograde ? " (rétrograde)" : ""} à ${p.degree}°`)
-      .join(", ");
+      const { sunSign, moonSign, ascendant, planetPositions, aspects } = astroData;
 
-    const aspectSummary = aspects
-      .slice(0, 8)
-      .map((a) => `${a.planet1} ${a.symbol} ${a.planet2} (${a.type}, orbe ${a.orb}°)`)
-      .join("; ");
+      const planetSummary = planetPositions
+        .map((p) => `${p.planet.name} en ${p.sign.name}${p.retrograde ? " (rétrograde)" : ""} à ${p.degree}°`)
+        .join(", ");
 
-    const themePrompt = THEME_CONFIG[theme]?.prompt ?? THEME_CONFIG.global.prompt;
+      const aspectSummary = aspects
+        .slice(0, 8)
+        .map((a) => `${a.planet1} ${a.symbol} ${a.planet2} (${a.type}, orbe ${a.orb}°)`)
+        .join("; ");
 
-    const prompt = `Tu es un astrologue expert avec une connaissance profonde de l'astrologie occidentale et védique. Génère une prévision astrologique détaillée et poétique en français.
+      const themePrompt = THEME_CONFIG[theme]?.prompt ?? THEME_CONFIG.global.prompt;
+
+      const prompt = `Tu es un astrologue expert avec une connaissance profonde de l'astrologie occidentale et védique. Génère une prévision astrologique détaillée et poétique en français.
 
 **Thème de la prévision :** ${themePrompt}
 
@@ -116,44 +123,58 @@ ${aspectSummary || "Aucun aspect majeur significatif"}
 
 Utilise un ton à la fois mystique, poétique et concret. Inclus des métaphores cosmiques. Formate avec des sections claires en utilisant des marqueurs **Titre :** pour chaque section. La prévision doit être riche, détaillée et personnalisée (environ 400-500 mots).`;
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const stream = await client.messages.stream({
+        model: "claude-opus-4-6",
+        max_tokens: 2048,
+        thinking: { type: "adaptive" },
+        system: "Tu es AstroVision, un astrologue de renommée mondiale qui combine la sagesse ancienne des étoiles avec les insights de l'intelligence artificielle moderne. Tes prévisions sont poétiques, précises et profondément perspicaces.",
+        messages: [{ role: "user", content: prompt }],
+      });
 
-    const stream = await client.messages.stream({
-      model: "claude-opus-4-6",
-      max_tokens: 2048,
-      thinking: { type: "adaptive" },
-      system: "Tu es AstroVision, un astrologue de renommée mondiale qui combine la sagesse ancienne des étoiles avec les insights de l'intelligence artificielle moderne. Tes prévisions sont poétiques, précises et profondément perspicaces.",
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const encoder = new TextEncoder();
-    const readable = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const event of stream) {
-            if (
-              event.type === "content_block_delta" &&
-              event.delta.type === "text_delta"
-            ) {
-              controller.enqueue(encoder.encode(event.delta.text));
+      const encoder = new TextEncoder();
+      const readable = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const event of stream) {
+              if (
+                event.type === "content_block_delta" &&
+                event.delta.type === "text_delta"
+              ) {
+                controller.enqueue(encoder.encode(event.delta.text));
+              }
             }
+            controller.close();
+          } catch (error) {
+            controller.error(error);
           }
-          controller.close();
-        } catch (error) {
-          controller.error(error);
-        }
-      },
-    });
+        },
+      });
 
-    return new Response(readable, {
+      return new Response(readable, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Transfer-Encoding": "chunked",
+          "X-Content-Type-Options": "nosniff",
+          "X-Prediction-Source": "claude",
+        },
+      });
+    } catch (error) {
+      console.error("Claude API error — falling back to local generator:", error);
+      // Fall through to local generator
+    }
+  }
+
+  // ── Path B: Local generator (no API key, or Claude unavailable) ───────────
+  try {
+    const text = generatePrediction(astroData, theme);
+    return new Response(text, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "Transfer-Encoding": "chunked",
-        "X-Content-Type-Options": "nosniff",
+        "X-Prediction-Source": "local",
       },
     });
   } catch (error) {
-    console.error("Prediction API error:", error);
+    console.error("Local prediction error:", error);
     return new Response(
       JSON.stringify({ error: "Erreur lors de la génération de la prévision" }),
       { status: 500, headers: { "Content-Type": "application/json" } }

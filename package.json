@@ -12,7 +12,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test lib/astrology.test.ts",
+    "test": "node --experimental-strip-types --test lib/astrology.test.ts lib/predict.test.ts",
     "android:init": "npx cap init AstroVision com.astrovision.app --web-dir out",
     "android:add": "npx cap add android",
     "android:sync": "npx cap sync android",
